@@ -1,0 +1,81 @@
+﻿@model PhotoBlogs.Models.Post
+@using PhotoBlogs.Models.PostViewModels
+@using PhotoBlogs.Services
+@inject IUserPermissionsService UserPermissions
+@{
+    PostCommentModel postCommentModel = new PostCommentModel();
+    ViewData["Title"] = "Details";
+    var canEditPost = UserPermissions.CanEditPost(this.Model);
+}
+
+<h1>@Model.Name<small> by <a asp-action="IndexWithUser" asp-controller="Posts" asp-route-userName="@Model.Creator.UserName">@Model.Creator.UserName</a></small></h1>
+<p>
+    <a asp-action="Index" asp-controller="Posts" class="btn btn-default">Back</a>
+    @if (canEditPost)
+    {
+        <a asp-action="Edit" asp-controller="Posts" asp-route-postId="@Model.Id" class="btn btn-default">Edit</a>
+        <a asp-action="Delete" asp-controller="Posts" asp-route-postId="@Model.Id" class="btn btn-default">Delete</a>
+    }
+</p>
+
+<div class="row">
+    <div class="col-md-9">
+        <div class="thumbnail">
+            <img src="@Model.FilePath" alt="Cat 1" title="Cat 1" />
+        </div>
+        <div class="row">
+            <div class="col-md-9">
+                <p>@Model.Description</p>
+                <p>
+                    @foreach (var item in Model.Tags)
+                    {
+                        <a asp-action="IndexWithTag" asp-controller="Posts" asp-route-tag="@item.Tag">#@item.Tag</a>
+                    }
+                </p>
+            </div>
+            <div class="col-md-3 text-right">
+                <strong>@Model.NumberOfLikes likes</strong>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <form asp-action="PutLikes" asp-controller="Posts" asp-route-postId ="@Model.Id">
+                        <button type="submit" class="btn btn-primary">Like</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        @if (User.Identity.IsAuthenticated)
+        {
+            <form asp-action="Create" asp-controller="PostComments" asp-route-postId="@Model.Id" method="post">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <div class="panel-title">Add comment</div>
+                    </div>
+                    <div class="panel-body text-right">
+                        <textarea name="postCommentModel.Text" style="width: 100%; max-width: 100%;"></textarea>
+                        <button type="submit" class="btn btn-sm btn-primary">Add</button>
+                    </div>
+                </div>
+                @if (@ViewBag.Error != null)
+                {
+                    <span class="text-danger field-validation-error">@ViewBag.Error</span>
+                }
+            </form>
+        }
+        @foreach (var item in Model.Comments.OrderByDescending(x => x.Created))
+        {
+            <div class="panel panel-default">
+                <div class="panel-heading"><a asp-action="IndexWithUser" asp-controller="Posts" asp-route-userName="@item.Creator.UserName">@item.Creator.UserName</a> commented on @item.Created</div>
+                <div class="panel-body">@item.Text</div>
+                @if (UserPermissions.CanEditPostComment(item))
+                {
+                    <form method="post" asp-action="Delete" asp-controller="PostComments" asp-route-postId="@item.PostId" asp-route-commentId="@item.Id" class="panel-footer text-right">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+</div>

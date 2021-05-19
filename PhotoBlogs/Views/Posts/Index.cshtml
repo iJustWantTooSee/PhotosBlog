@@ -1,0 +1,24 @@
+﻿@model IEnumerable<PhotoBlogs.Models.Post>
+
+
+<h1>@ViewBag.Title</h1>
+<div class="row">
+    @if (User.Identity.IsAuthenticated)
+    {
+        <div class="col-xs-6 col-md-3">
+            <a asp-controller="Posts" asp-action="Create" class="thumbnail new-image">
+                <div>
+                    + Upload
+                </div>
+            </a>
+        </div>
+    }
+    @foreach (var post in Model)
+    {
+        <div class="col-xs-6 col-md-3">
+            <a asp-action="Details" asp-controller="Posts" asp-route-postId="@post.Id" class="thumbnail image">
+                <img src="@post.FilePath" alt="Cat 1" title="Cat 1" class="img-responsive" />
+            </a>
+        </div>
+    }
+</div>
